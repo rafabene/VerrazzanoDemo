@@ -1,0 +1,1 @@
+insert into Message (id, username, message, timestamp) values (99999, 'Benevides', 'Hello World', '2015-06-10 22:10:00');
