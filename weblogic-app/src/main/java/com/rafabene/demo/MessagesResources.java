@@ -29,6 +29,7 @@ public class MessagesResources {
 		try {
 			messageRepository.save(message);
 		} catch (Exception e) {
+			e.printStackTrace();
 			return Response.serverError().entity(e.getMessage()).build();
 		}
 		return Response.ok().build();

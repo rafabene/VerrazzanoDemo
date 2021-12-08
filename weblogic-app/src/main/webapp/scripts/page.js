@@ -47,12 +47,11 @@ $(document).ready(function() {
       $.ajax({
         url : 'api/messages',
         success : function(result) {
-          var messages = JSON.parse(result);
           // Clear the table before feeling it again
           $('#mytable tbody').empty();
-          for ( var i in messages) {
+          for ( var i in result) {
             $('#mytable tbody').append(
-                '<tr><td><b>' + messages[i].username + '</b></td><td>' + messages[i].message + '</td></tr>');
+                '<tr><td><b>' + result[i].username + '</b></td><td>' + result[i].message + '</td></tr>');
           }
         },
         error : function(request, status, error) {
