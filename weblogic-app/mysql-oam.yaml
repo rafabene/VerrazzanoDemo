@@ -1,0 +1,104 @@
+apiVersion: core.oam.dev/v1alpha2
+kind: Component
+metadata:
+  name: greetingsdb-mysql-service
+spec:
+  workload:
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: mysql
+    spec:
+      ports:
+        - port: 3306
+          name: mysql
+      selector:
+        app: mysql
+---
+apiVersion: core.oam.dev/v1alpha2
+kind: Component
+metadata:
+  name: greetingsdb-mysql-deployment
+spec:
+  workload:
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: mysql
+    spec:
+      progressDeadlineSeconds: 600
+      replicas: 1
+      revisionHistoryLimit: 10
+      selector:
+        matchLabels:
+          app: mysql
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: mysql
+        spec:
+          containers:
+            - env:
+                - name: MYSQL_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: demodomain-jdbc-greetingsdb
+                      key: password
+                - name: MYSQL_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: demodomain-jdbc-greetingsdb
+                      key: username
+                - name: MYSQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: demodomain-jdbc-greetingsdb
+                      key: password
+                - name: MYSQL_DATABASE
+                  value: greetingsdb
+              image: mysql:latest
+              imagePullPolicy: IfNotPresent
+              name: mysql
+              ports:
+                - containerPort: 3306
+                  name: mysql
+                  protocol: TCP
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              volumeMounts:
+                - mountPath: /docker-entrypoint-initdb.d
+                  name: mysql-initdb
+          dnsPolicy: ClusterFirst
+          imagePullSecrets:
+            - name: ocr
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+          volumes:
+            - configMap:
+                defaultMode: 420
+                name: mysql-initdb-config
+              name: mysql-initdb
+---
+apiVersion: core.oam.dev/v1alpha2
+kind: Component
+metadata:
+  name: greetingsdb-mysql-configmap
+spec:
+  workload:
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: mysql-initdb-config
+    data:
+      initdb.sql: |
+        CREATE TABLE Message (ID BIGINT NOT NULL, MESSAGE VARCHAR(255), TIMESTAMP DATETIME, USERNAME VARCHAR(255), PRIMARY KEY (ID));
+        CREATE TABLE SEQUENCE (SEQ_NAME VARCHAR(50) NOT NULL, SEQ_COUNT DECIMAL(38), PRIMARY KEY (SEQ_NAME));
+        INSERT INTO SEQUENCE( SEQ_NAME, SEQ_COUNT) VALUES ('SEQ_GEN', 0);
+        INSERT INTO Message (ID, USERNAME, MESSAGE, TIMESTAMP) VALUES (99999, 'Benevides', 'Hello World', '2015-06-10 22:10:00');
+
