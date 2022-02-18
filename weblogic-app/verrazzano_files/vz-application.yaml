@@ -43,7 +43,6 @@ spec:
       template:
         metadata:
           name: demodomain-domain
-          namespace: demodomain
         spec:
           domainUID: demodomain
 
@@ -91,7 +90,6 @@ spec:
     kind: ConfigMap
     metadata:
       name: demodomain-configmap
-      namespace: demodomain
     data:
       wdt_jdbc.yaml: |
         resources:
