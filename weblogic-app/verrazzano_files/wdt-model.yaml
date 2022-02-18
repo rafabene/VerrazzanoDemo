@@ -1,0 +1,32 @@
+domainInfo:
+    AdminUserName: '@@SECRET:__weblogic-credentials__:username@@'
+    AdminPassword: '@@SECRET:__weblogic-credentials__:password@@'
+topology:
+    Name: demodomain
+    DomainVersion: 14.1.1.0.0
+    Server:
+        AdminServer:
+resources:
+    JDBCSystemResource:
+        greetingsdb:
+            Target: AdminServer
+            JdbcResource:
+                DatasourceType: GENERIC
+                JDBCConnectionPoolParams:
+                    TestTableName: SQL SELECT 1
+                JDBCDataSourceParams:
+                    JNDIName: jdbc/greetingsdb
+                    GlobalTransactionsProtocol: TwoPhaseCommit
+                JDBCDriverParams:
+                    DriverName: com.mysql.cj.jdbc.MysqlXADataSource
+                    PasswordEncrypted: '@@SECRET:@@ENV:DOMAIN_UID@@-jdbc-greetingsdb:password@@'
+                    URL: '@@PROP:JDBC.greetingsdb.URL@@'
+                    Properties:
+                        user:
+                            Value: '@@SECRET:@@ENV:DOMAIN_UID@@-jdbc-greetingsdb:username@@'
+appDeployments:
+    Application:
+        'weblogic-app':
+            SourcePath: 'wlsdeploy/applications/weblogic-app.war'
+            ModuleType: war
+            Target: AdminServer

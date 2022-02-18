@@ -1,0 +1,103 @@
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
+
+apiVersion: core.oam.dev/v1alpha2
+kind: ApplicationConfiguration
+metadata:
+  name: demodomain-appconf
+  annotations:
+    version: v1.0.0
+    description: "demodomain application configuration"
+spec:
+  components:
+    - componentName: demodomain-domain
+      traits:
+        - trait:
+            apiVersion: oam.verrazzano.io/v1alpha1
+            kind: MetricsTrait
+            spec:
+              scraper: verrazzano-system/vmi-system-prometheus-0
+        - trait:
+            apiVersion: oam.verrazzano.io/v1alpha1
+            kind: IngressTrait
+            spec:
+              rules:
+                - paths:
+                    # application weblogic-app
+                    - path: "/weblogic-app"
+                      pathType: Prefix
+    - componentName: demodomain-configmap
+    - componentName: greetingsdb-mysql-service
+    - componentName: greetingsdb-mysql-deployment
+    - componentName: greetingsdb-mysql-configmap
+---
+apiVersion: core.oam.dev/v1alpha2
+kind: Component
+metadata:
+  name: demodomain-domain
+spec:
+  workload:
+    apiVersion: oam.verrazzano.io/v1alpha1
+    kind: VerrazzanoWebLogicWorkload
+    spec:
+      template:
+        metadata:
+          name: demodomain-domain
+          namespace: demodomain
+        spec:
+          domainUID: demodomain
+
+          # WebLogic Image Tool provides domainHome, domainHomeSourceType, and imageName
+          domainHome: {{{domainHome}}}
+          domainHomeSourceType: {{{domainHomeSourceType}}}
+          image: {{{imageName}}}
+#          imagePullSecrets:
+#            - name: ocir
+          includeServerOutInPodLog: true
+          webLogicCredentialsSecret:
+            name: demodomain-weblogic-credentials
+          configuration:
+            introspectorJobActiveDeadlineSeconds: 900
+            model:
+              configMap: demodomain-configmap
+              domainType: WLS
+
+              # WebLogic Image Tool provides modelHome
+              modelHome: {{{modelHome}}}
+
+              # encryption for the WDT model and the SystemSerializedIni.data file.
+              # used only for model-in-image deployment, can be removed for other types.
+              runtimeEncryptionSecret: demodomain-runtime-encryption-secret
+
+            secrets:
+              - demodomain-jdbc-greetingsdb
+
+          serverPod:
+            env:
+              - name: JAVA_OPTIONS
+                value: "-Dweblogic.StdoutDebugEnabled=false"
+              - name: USER_MEM_ARGS
+                value: "-Djava.security.egd=file:/dev/./urandom -Xms64m -Xmx256m"
+              - name: helidonURL
+                value: "http://hello-helidon-deployment.demo-application.svc.cluster.local:8080"                
+---
+apiVersion: core.oam.dev/v1alpha2
+kind: Component
+metadata:
+  name: demodomain-configmap
+spec:
+  workload:
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: demodomain-configmap
+      namespace: demodomain
+    data:
+      wdt_jdbc.yaml: |
+        resources:
+          JDBCSystemResource:
+            'greetingsdb':
+              JdbcResource:
+                JDBCDriverParams:
+                  # This is the URL of the database used by the WebLogic Server application
+                  URL: "jdbc:mysql://mysql.demo-application.svc.cluster.local:3306/greetingsdb"
