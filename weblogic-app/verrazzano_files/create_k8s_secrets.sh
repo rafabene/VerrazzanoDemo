@@ -3,7 +3,7 @@
 set -eu
 
 # Edit these values to change the namespace or domain UID
-NAMESPACE=demo-domain
+NAMESPACE=demo-application
 DOMAIN_UID=demodomain
 
 LONG_SECRETS=()
