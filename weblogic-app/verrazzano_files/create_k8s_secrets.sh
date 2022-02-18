@@ -31,10 +31,10 @@ function create_paired_k8s_secret {
 }
 
 # Update <user> and <password> for weblogic-credentials
-create_paired_k8s_secret weblogic-credentials admin 123456778
+create_paired_k8s_secret weblogic-credentials admin 12345678
 
 # Update <user> and <password> for jdbc-greetingsdb
-create_paired_k8s_secret jdbc-greetingsdb myuser 1234567812345678
+create_paired_k8s_secret jdbc-greetingsdb myuser 12345678
 
 # Update <password> used to encrypt model and domain hashes
 # This secret is only required for model-in-image deployments
