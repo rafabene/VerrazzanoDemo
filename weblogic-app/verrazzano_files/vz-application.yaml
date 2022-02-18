@@ -47,9 +47,10 @@ spec:
           domainUID: demodomain
 
           # WebLogic Image Tool provides domainHome, domainHomeSourceType, and imageName
-          domainHome: {{{domainHome}}}
-          domainHomeSourceType: {{{domainHomeSourceType}}}
-          image: {{{imageName}}}
+          domainHome: /u01/domains/base_domain
+          domainHomeSourceType: FromModel
+          image: myrepo/myuser/weblogic:1.0
+
 #          imagePullSecrets:
 #            - name: ocir
           includeServerOutInPodLog: true
@@ -62,7 +63,7 @@ spec:
               domainType: WLS
 
               # WebLogic Image Tool provides modelHome
-              modelHome: {{{modelHome}}}
+              modelHome: 
 
               # encryption for the WDT model and the SystemSerializedIni.data file.
               # used only for model-in-image deployment, can be removed for other types.
@@ -78,7 +79,7 @@ spec:
               - name: USER_MEM_ARGS
                 value: "-Djava.security.egd=file:/dev/./urandom -Xms64m -Xmx256m"
               - name: helidonURL
-                value: "http://hello-helidon-deployment.demo-application.svc.cluster.local:8080"                
+                value: "http://hello-helidon-deployment.demo-application.svc.cluster.local:8080"
 ---
 apiVersion: core.oam.dev/v1alpha2
 kind: Component
