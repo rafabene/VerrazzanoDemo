@@ -79,22 +79,17 @@ steps:
         --path /workspace/weblogic-deploy.zip \
         --type wdt \
        --version latest
-
-  - type: Command
-    name: "Create image using ImageTool"
-    shell: bash
-    command: |
-
-       /workspace/imagetool/bin/imagetool.sh create \
+      
+      bin/imagetool.sh create \
         --tag weblogic:1.0 \
         --version 14 \
         --jdkVersion 11 \
-        --wdtModel /workspace/weblogic-app/verrazzano_files/wdt-model.yaml \
+        --wdtModel $OCI_PRIMARY_SOURCE_DIR/weblogic-app/verrazzano_files/wdt-model.yaml \
         --wdtArchive /workspace/wdt-archive.zip \
         --wdtVariables /workspace/weblogic-app/verrazzano_files/vz_variable.properties \
-        --resourceTemplates=weblogic-app/verrazzano_files/vz-application.yaml \
+        --resourceTemplates OCI_PRIMARY_SOURCE_DIR/weblogic-app/verrazzano_files/vz-application.yaml \
         --wdtModelOnly
-        
+
 outputArtifacts:
   - name: weblogic
     type: DOCKER_IMAGE
