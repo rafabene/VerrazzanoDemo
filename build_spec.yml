@@ -1,0 +1,96 @@
+version: 0.1                         
+component: build                     
+timeoutInSeconds: 10000              
+shell: bash                          
+
+inputArtifacts:
+  - name: WIT
+    type: URL
+    url: https://github.com/oracle/weblogic-image-tool/releases/latest/download/imagetool.zip
+    location: /workspace/imagetool.zip
+
+  - name: WDT
+    type: URL
+    url: https://github.com/oracle/weblogic-deploy-tooling/releases/latest/download/weblogic-deploy.zip
+    location: /workspace/weblogic-deploy.zip
+
+  - name: WEBLOGIC
+    type: GENERIC_ARTIFACT
+    artifactId: ocid1.genericartifact.oc1.sa-saopaulo-1.0.amaaaaaa6odkg5yafg6kq3lgdbgy36khwdkywxkx3ndxpny473checvy7twq
+    location: /workspace/weblogic.jar
+
+  - name: JDK
+    type: GENERIC_ARTIFACT
+    artifactId: ocid1.genericartifact.oc1.sa-saopaulo-1.0.amaaaaaa6odkg5yasjvqtx3zshaqvzme3jzrgqpjsm2epeq7u2iqs4ouvxjq
+    location: /workspace/jdk.tar.gz
+
+steps:
+  - type: Command
+    name: "Build Weblogic App"
+    shell: bash
+    command: |
+      cd weblogic-app
+      mvn clean package
+
+  - type: Command
+    name: "Create wdt archive folder"
+    shell: bash
+    command: |
+      mkdir -p weblogic-app/verrazzano_files/wlsdeploy/applications
+
+  - type: Command
+    name: "Move WAR to wdt archive folder"    
+    shell: bash
+    command: |
+      mv weblogic-app/target/weblogic-app.war weblogic-app/verrazzano_files/wlsdeploy/applications
+
+  - type: Command
+    name: "Create a new wdt archive"
+    shell: bash
+    command: |
+      rm weblogic-app/verrazzano_files/wdt-archive.zip
+      cd weblogic-app/verrazzano_files/
+      zip -r wdt-archive.zip wlsdeploy
+
+  - type: Command
+    name: "Extract ImageTool"
+    shell: bash
+    command: |
+      cd /workspace/
+      unzip imagetool.zip
+
+  - type: Command
+    name: "Execute ImageTool"
+    shell: bash
+    command: |
+      cd /workspace/imagetool/
+
+      bin/imagetool.sh cache addInstaller \
+        --path  /workspace/jdk.tar.gz \
+        --type jdk \
+        --version 11
+
+      bin/imagetool.sh cache addInstaller \
+        --path /workspace/weblogic.jar \
+        --type wls \
+        --version 14
+
+      bin/imagetool.sh cache addInstaller \
+        --path /workspace/weblogic-deploy.zip \
+        --type wdt \
+       --version latest
+
+       bin/imagetool.sh create \
+        --tag weblogic:1.0 \
+        --version 14 \
+        --jdkVersion 11 \
+        --wdtModel /workspace/weblogic-app/verrazzano_files/wdt-model.yaml \
+        --wdtArchive /workspace/wdt-archive.zip \
+        --wdtVariables /workspace/weblogic-app/verrazzano_files/vz_variable.properties \
+        --resourceTemplates=  /workspace/weblogic-app/verrazzano_files/vz-application.yaml \
+        --wdtModelOnly
+
+outputArtifacts:
+  - name: weblogic
+    type: DOCKER_IMAGE
+    location: weblogic:1.0
