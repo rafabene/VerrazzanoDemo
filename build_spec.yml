@@ -87,7 +87,7 @@ steps:
         --wdtModel /workspace/weblogic-app/verrazzano_files/wdt-model.yaml \
         --wdtArchive /workspace/wdt-archive.zip \
         --wdtVariables /workspace/weblogic-app/verrazzano_files/vz_variable.properties \
-        --resourceTemplates=  /workspace/weblogic-app/verrazzano_files/vz-application.yaml \
+        --resourceTemplates /workspace/weblogic-app/verrazzano_files/vz-application.yaml \
         --wdtModelOnly
 
 outputArtifacts:
